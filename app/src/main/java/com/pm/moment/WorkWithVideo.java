@@ -25,7 +25,7 @@ public class WorkWithVideo {
     public File init(List<String> videoUris) throws IOException, JCodecException {
         List<Movie> movies = initVideos(videoUris);
         List<Track> audioTracks = getAudioTracks(movies);
-        List<String> newVideosPaths = getMomentVideos(audioTracks);
+        List<String> newVideosPaths = getMomentVideos(audioTracks, videoUris);
         movies = initVideos(newVideosPaths);
         audioTracks = getAudioTracks(movies);
         List<Track> videoTracks = getVideoTracks(movies);
@@ -64,7 +64,7 @@ public class WorkWithVideo {
         return videoTracks;
     }
 
-    private List<String> getMomentVideos(List<Track> trackList) throws IOException {
+    private List<String> getMomentVideos(List<Track> trackList, List<String> videoUris) throws IOException {
         checkDefaultDir();
         List<String> newVideosPaths = new ArrayList<String>();
         int counter = 0;
@@ -85,7 +85,7 @@ public class WorkWithVideo {
                     moment = sampleCounter * timescale / duration;
                 }
             }
-            File cutVideo = new File(videoFolderPath + track.getName().substring(0, track.getName().length() - 3));
+            File cutVideo = new File(videoUris.get(counter - 1));
             String newName = "File" + counter + ".mp4";
             if (counter == 1) {
                 TrimVideo.startTrim(cutVideo, videoFolderPath, 0, moment * 1000 + 1000, newName);
