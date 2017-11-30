@@ -1,5 +1,6 @@
 package com.pm.moment
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.media.ThumbnailUtils
@@ -9,6 +10,12 @@ import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import android.Manifest.permission
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.support.v4.app.ActivityCompat
+
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,10 +25,16 @@ class MainActivity : AppCompatActivity() {
     private var secondVideoPath: String? = null
     private var workWithVideo: WorkWithVideo = WorkWithVideo()
 
+    private val PERMISSION_REQUEST_CODE = 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                PERMISSION_REQUEST_CODE)
 
         title = resources.getString(R.string.create_moment)
 
