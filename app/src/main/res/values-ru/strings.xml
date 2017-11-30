@@ -2,5 +2,6 @@
 <resources>
     <string name="app_name">Moment</string>
     <string name="create_moment">Создать момент</string>
-    <string name="make_magic">Make magic</string>
+    <string name="make_magic">Сотворить магию</string>
+    <string name="share">Поделиться</string>
 </resources>

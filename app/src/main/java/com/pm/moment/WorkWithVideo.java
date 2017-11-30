@@ -65,6 +65,7 @@ public class WorkWithVideo {
     }
 
     private List<String> getMomentVideos(List<Track> trackList) throws IOException {
+        checkDefaultDir();
         List<String> newVideosPaths = new ArrayList<String>();
         int counter = 0;
         for (Track track : trackList) {
@@ -84,22 +85,19 @@ public class WorkWithVideo {
                     moment = sampleCounter * timescale / duration;
                 }
             }
-            File cutVideo = new File(videoFolderPath + track.getName().substring(0,
-                    track.getName().length() - 3));
+            File cutVideo = new File(videoFolderPath + track.getName().substring(0, track.getName().length() - 3));
             String newName = "File" + counter + ".mp4";
             if (counter == 1) {
                 TrimVideo.startTrim(cutVideo, videoFolderPath, 0, moment * 1000 + 1000, newName);
             } else {
-                TrimVideo.startTrim(cutVideo, videoFolderPath, moment * 1000 + 2000,
-                        timescale * 1000, newName);
+                TrimVideo.startTrim(cutVideo, videoFolderPath, moment * 1000 + 2000, timescale * 1000, newName);
             }
             newVideosPaths.add(videoFolderPath + newName);
         }
         return newVideosPaths;
     }
 
-    private File concat(List<Track> audioTracks, List<Track> videoTracks, List<String> filePaths)
-            throws IOException, JCodecException {
+    private File concat(List<Track> audioTracks, List<Track> videoTracks, List<String> filePaths) throws IOException, JCodecException {
         Movie result = new Movie();
         if (!audioTracks.isEmpty()) {
             result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
@@ -108,12 +106,18 @@ public class WorkWithVideo {
             result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
         }
         Container out = new DefaultMp4Builder().build(result);
-        FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + "output.mp4"),
-                "rw").getChannel();
+        FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + "output.mp4"), "rw").getChannel();
         out.writeContainer(fileChannel);
         fileChannel.close();
         clear(filePaths);
         return new File(videoFolderPath + "output.mp4");
+    }
+
+    private void checkDefaultDir() {
+        File defaultDir = new File(videoFolderPath);
+        if (!defaultDir.exists()) {
+            defaultDir.mkdir();
+        }
     }
 
     private void clear(List<String> filePaths) {

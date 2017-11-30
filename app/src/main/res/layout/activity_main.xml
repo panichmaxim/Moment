@@ -49,7 +49,7 @@
                         android:id="@+id/first_video_thumbnail"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:scaleType="fitXY" />
+                        android:scaleType="centerCrop" />
 
                 </RelativeLayout>
 
@@ -85,7 +85,7 @@
                         android:id="@+id/second_video_thumbnail"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:scaleType="fitXY" />
+                        android:scaleType="centerCrop" />
 
                 </RelativeLayout>
 
