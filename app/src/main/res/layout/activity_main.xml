@@ -30,6 +30,64 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <RelativeLayout
+                    android:id="@+id/first_video"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/choose_video_button_frame_height"
+                    android:layout_margin="@dimen/choose_video_button_margin_horizontal"
+                    android:background="@drawable/round_corner"
+                    android:clickable="true">
+
+                    <ImageView
+                        android:layout_width="@dimen/choose_video_button_size"
+                        android:layout_height="@dimen/choose_video_button_size"
+                        android:layout_centerInParent="true"
+                        android:src="@drawable/add_video_2"
+                        android:tint="@color/colorAccent" />
+
+                    <ImageView
+                        android:id="@+id/first_video_thumbnail"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitXY" />
+
+                </RelativeLayout>
+
+                <Button
+                    android:id="@+id/make_magic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="@dimen/choose_video_concat_button_margin_vertical"
+                    android:layout_marginTop="@dimen/choose_video_concat_button_margin_vertical"
+                    android:background="@color/colorPrimary"
+                    android:padding="10dp"
+                    android:text="@string/make_magic"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp" />
+
+                <RelativeLayout
+                    android:id="@+id/second_video"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/choose_video_button_frame_height"
+                    android:layout_margin="@dimen/choose_video_button_margin_horizontal"
+                    android:background="@drawable/round_corner"
+                    android:clickable="true">
+
+                    <ImageView
+                        android:layout_width="@dimen/choose_video_button_size"
+                        android:layout_height="@dimen/choose_video_button_size"
+                        android:layout_centerInParent="true"
+                        android:src="@drawable/add_video_2"
+                        android:tint="@color/colorAccent" />
+
+                    <ImageView
+                        android:id="@+id/second_video_thumbnail"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitXY" />
+
+                </RelativeLayout>
 
             </LinearLayout>
 

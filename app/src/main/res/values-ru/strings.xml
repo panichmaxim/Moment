@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Moment</string>
+    <string name="create_moment">Создать момент</string>
+    <string name="make_magic">Make magic</string>
+</resources>
