@@ -23,7 +23,6 @@ class MainActivity : AppCompatActivity() {
     private val SELECT_SECOND_VIDEO = 2
     private var firstVideoPath: String? = null
     private var secondVideoPath: String? = null
-    private var workWithVideo: WorkWithVideo = WorkWithVideo()
 
     private val PERMISSION_REQUEST_CODE = 1
 
@@ -50,7 +49,7 @@ class MainActivity : AppCompatActivity() {
             if (firstVideoPath == null || secondVideoPath == null) {
                 Toast.makeText(this, "Выберите два видео", Toast.LENGTH_LONG).show()
             } else {
-                val concatVideo = workWithVideo.init(mutableListOf(firstVideoPath, secondVideoPath))
+                val concatVideo = WorkWithVideo.init(mutableListOf(firstVideoPath, secondVideoPath))
                 val intent = Intent(this, ResultActivity::class.java)
                 intent.putExtra(ResultActivity.CONCAT_VIDEO_PATH, concatVideo.absolutePath)
 //                intent.putExtra(ResultActivity.CONCAT_VIDEO_PATH, firstVideoPath)
