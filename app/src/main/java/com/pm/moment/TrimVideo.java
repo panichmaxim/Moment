@@ -1,6 +1,8 @@
 package com.pm.moment;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
+
 import com.coremedia.iso.boxes.Container;
 import com.googlecode.mp4parser.FileDataSourceViaHeapImpl;
 import com.googlecode.mp4parser.authoring.Movie;
@@ -37,8 +39,14 @@ public class TrimVideo {
         movie.setTracks(new LinkedList<Track>());
         // remove all tracks we will create new tracks from the old
 
-        double startTime1 = startMs / 1000;
-        double endTime1 = endMs / 1000;
+        double startTime1 = (double) startMs / 1000;
+        double endTime1 = (double) endMs / 1000;
+
+
+        Log.i("START MS", Double.toString(startMs));
+        Log.i("START TIME", Double.toString(startTime1));
+        Log.i("END MS", Double.toString(endMs));
+        Log.i("END TIME", Double.toString(endTime1));
 
         boolean timeCorrected = false;
 
