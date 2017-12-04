@@ -3,15 +3,12 @@ package com.pm.moment;
 import android.os.Environment;
 import android.util.Log;
 import com.coremedia.iso.boxes.Container;
-import com.googlecode.mp4parser.FileDataSourceViaHeapImpl;
 import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.Sample;
 import com.googlecode.mp4parser.authoring.Track;
 import com.googlecode.mp4parser.authoring.builder.DefaultMp4Builder;
 import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
 import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
-import com.googlecode.mp4parser.authoring.tracks.CroppedTrack;
-
 import org.jcodec.api.JCodecException;
 import java.io.File;
 import java.io.IOException;
@@ -96,22 +93,9 @@ public class WorkWithVideo {
     private static double getMoment(Track track, double duration, double timescale, long[] sampleDurations) {
         double moment = 0;
         List<Sample> samples = track.getSamples();
-        //long maxSample = 0;
         double sampleCounter = 0;
-        /*
-        for (int i = 0; i < samples.size(); i++) {
-            sampleCounter += sampleDurations[i];
-            if (samples.get(i).getSize() >= maxSample) {
-                maxSample = samples.get(i).getSize();
-                moment = sampleCounter * timescale / duration;
-            }
-        }*/
         int counter = 1;
         int highSampleDur = 100;
-        ByteBuffer buffer = samples.get(0).asByteBuffer();
-        byte[] b = new byte[buffer.remaining()];
-        buffer.wrap(b);
-        Log.i("BUFF", Integer.toString(ByteArrayTo.convertToInt(b)));
         for (int i = 0; i < samples.size(); i++) {
             sampleCounter += sampleDurations[i];
             if (samples.get(i).getSize() > 350 && i > 0) {
@@ -121,9 +105,6 @@ public class WorkWithVideo {
                     if (counter <= highSampleDur) {
                         highSampleDur = counter;
                         moment = sampleCounter * timescale / duration;
-                        Log.i("SAMPLE", Long.toString(samples.get(i).getSize()));
-                        Log.i("MOMENT", Double.toString(moment));
-                        Log.i("COUNTER", Integer.toString(counter));
                     }
                     counter = 1;
                 }
@@ -133,13 +114,19 @@ public class WorkWithVideo {
         return moment;
     }
 
-    private static int getTotalSize(List<Sample> samples) {
-        int totalSize = 0;
+    private static double getHighestMoment(Track track, double duration, double timescale, long[] sampleDurations) {
+        double moment = 0;
+        List<Sample> samples = track.getSamples();
+        long maxSample = 0;
+        double sampleCounter = 0;
         for (int i = 0; i < samples.size(); i++) {
-            totalSize += samples.get(i).getSize();
+            sampleCounter += sampleDurations[i];
+            if (samples.get(i).getSize() >= maxSample) {
+                maxSample = samples.get(i).getSize();
+                moment = sampleCounter * timescale / duration;
+            }
         }
-        totalSize /= samples.size();
-        return totalSize;
+        return moment;
     }
 
     private static String cutVideos(File cutVideo, double moment, double timescale, int counter) throws IOException {
@@ -147,11 +134,8 @@ public class WorkWithVideo {
         moment *= 1000;
         timescale *= 1000;
         if (counter == 1) {
-            moment -= 150;
-            Log.i("MOMENT", Double.toString(moment));
             TrimVideo.startTrim(cutVideo, videoFolderPath, 0, moment, newName);
         } else {
-            Log.i("MOMENT", Double.toString(moment));
             TrimVideo.startTrim(cutVideo, videoFolderPath, moment, timescale, newName);
         }
         return newName;

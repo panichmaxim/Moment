@@ -80,7 +80,7 @@ public class TrimVideo {
 
 
                 if (currentTime > lastTime && currentTime <= startTime1) {
-                    // current sample is still before the new starttime
+                    // current sample is still before the new startime
                     startSample1 = currentSample;
                 }
                 if (currentTime > lastTime && currentTime <= endTime1) {
