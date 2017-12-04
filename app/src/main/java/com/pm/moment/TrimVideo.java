@@ -21,7 +21,7 @@ import java.util.List;
 
 public class TrimVideo {
 
-    public static void startTrim(@NonNull File src, @NonNull String dst, long startMs, long endMs, String newName) throws IOException {
+    public static void startTrim(@NonNull File src, @NonNull String dst, double startMs, double endMs, String newName) throws IOException {
         final String fileName = newName;
         final String filePath = dst + fileName;
 
@@ -30,7 +30,7 @@ public class TrimVideo {
         genVideoUsingMp4Parser(src, file, startMs, endMs);
     }
 
-    private static void genVideoUsingMp4Parser(@NonNull File src, @NonNull File dst, long startMs, long endMs) throws IOException {
+    private static void genVideoUsingMp4Parser(@NonNull File src, @NonNull File dst, double startMs, double endMs) throws IOException {
         // NOTE: Switched to using FileDataSourceViaHeapImpl since it does not use memory mapping (VM).
         // Otherwise we get OOM with large movie files.
         Movie movie = MovieCreator.build(new FileDataSourceViaHeapImpl(src.getAbsolutePath()));
@@ -39,8 +39,8 @@ public class TrimVideo {
         movie.setTracks(new LinkedList<Track>());
         // remove all tracks we will create new tracks from the old
 
-        double startTime1 = (double) startMs / 1000;
-        double endTime1 = (double) endMs / 1000;
+        double startTime1 = startMs / 1000;
+        double endTime1 = endMs / 1000;
 
 
         Log.i("START MS", Double.toString(startMs));

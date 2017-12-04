@@ -16,6 +16,7 @@ import org.jcodec.api.JCodecException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -84,9 +85,9 @@ public class WorkWithVideo {
             long[] sampleDurations = track.getSampleDurations();
             double moment;
             if (counter == 1) {
-                moment = getMoment(track, duration, timescale, sampleDurations, -500);
+                moment = getMoment(track, duration, timescale, sampleDurations);
             } else {
-                moment = getMoment(track, duration, timescale, sampleDurations, 250);
+                moment = getMoment(track, duration, timescale, sampleDurations);
             }
             File cutVideo = new File(videoUris.get(counter - 1));
             String newName = cutVideos(cutVideo, moment, timescale, counter);
@@ -96,42 +97,39 @@ public class WorkWithVideo {
         return newVideosPaths;
     }
 
-    private static double testGetMoment(Track track, double duration, double timescale, long[] sampleDurations) {
-        List<Sample> samples = track.getSamples();
-        long totalSize = 0;
-        for (int i = 0; i < samples.size(); i++) {
-            totalSize += samples.get(i).getSize();
-        }
-        totalSize /= samples.size();
+    private static double getMoment(Track track, double duration, double timescale, long[] sampleDurations) {
         double moment = 0;
-        long maxSampleNum = 0;
-        double sampleSizeCounter = 0;
-        long sizeCounter = 0;
-        long previousSizeCount = 10;
-        long maxSize = 0;
+        List<Sample> samples = track.getSamples();
+        //long maxSample = 0;
+        double sampleCounter = 0;
+        /*
         for (int i = 0; i < samples.size(); i++) {
-            Log.i("SAMPLE SIZE", Long.toString(samples.get(i).getSize()));
-            if (samples.get(i).getSize() >= 350 && i > 0) {
+            sampleCounter += sampleDurations[i];
+            if (samples.get(i).getSize() >= maxSample) {
+                maxSample = samples.get(i).getSize();
+                moment = sampleCounter * timescale / duration;
+            }
+        }*/
+        int counter = 1;
+        int highSampleDur = 100;
+        ByteBuffer buffer = samples.get(0).asByteBuffer();
+        byte[] b = new byte[buffer.remaining()];
+        buffer.wrap(b);
+        Log.i("BUFF", Integer.toString(ByteArrayTo.convertToInt(b)));
+        for (int i = 0; i < samples.size(); i++) {
+            sampleCounter += sampleDurations[i];
+            if (samples.get(i).getSize() > 350 && i > 0) {
                 if (samples.get(i).getSize() == samples.get(i - 1).getSize()) {
-                    if (sizeCounter == 0) {
-                        maxSampleNum = i - 1;
-                    }
-                    sizeCounter++;
+                    counter++;
                 } else {
-                    if (sizeCounter <= previousSizeCount) {
-                        if (sizeCounter == 0) {
-                            maxSampleNum = i;
-                        }
-                        Log.i("SIZE COUNTER", Long.toString(sizeCounter));
-                        for (int k = 0; k < maxSampleNum; k++) {
-                            sampleSizeCounter += sampleDurations[k];
-                        }
-                        Log.i("SAMPLE SIZE COUNTER", Double.toString(sampleSizeCounter));
-                        previousSizeCount = sizeCounter;
-                        maxSize = samples.get(i).getSize();
-                        moment = sampleSizeCounter * timescale / duration;
+                    if (counter <= highSampleDur) {
+                        highSampleDur = counter;
+                        moment = sampleCounter * timescale / duration;
+                        Log.i("SAMPLE", Long.toString(samples.get(i).getSize()));
+                        Log.i("MOMENT", Double.toString(moment));
+                        Log.i("COUNTER", Integer.toString(counter));
                     }
-                    sizeCounter = 0;
+                    counter = 1;
                 }
             }
         }
@@ -139,31 +137,13 @@ public class WorkWithVideo {
         return moment;
     }
 
-    private static double getMoment(Track track, double duration, double timescale, long[] sampleDurations, double er) {
-        double moment = 0;
-        List<Sample> samples = track.getSamples();
-        long maxSample = 0;
-        double sampleCounter = 0;
+    private static int getTotalSize(List<Sample> samples) {
+        int totalSize = 0;
         for (int i = 0; i < samples.size(); i++) {
-            sampleCounter += sampleDurations[i];
-            if (samples.get(i).getSize() >= maxSample) {
-                maxSample = samples.get(i).getSize();
-                double erCounter = samples.size() / 100 * er;
-                /*
-                for (double k = 0; i < erCounter; i++) {
-                    sampleCounter += erCounter * (double) sampleDurations[(int) k];
-                }
-                */
-                sampleCounter += er;
-                moment = sampleCounter * timescale / duration;
-                /*
-                for (double k = 0; i < erCounter; i++) {
-                    sampleCounter -= erCounter * (double) sampleDurations[(int) k];
-                }
-                */
-            }
+            totalSize += samples.get(i).getSize();
         }
-        return moment;
+        totalSize /= samples.size();
+        return totalSize;
     }
 
     private static String cutVideos(File cutVideo, double moment, double timescale, int counter) throws IOException {
@@ -171,10 +151,12 @@ public class WorkWithVideo {
         moment *= 1000;
         timescale *= 1000;
         if (counter == 1) {
-            TrimVideo.startTrim(cutVideo, videoFolderPath, 0, (long) moment, newName);
+            moment -= 150;
+            Log.i("MOMENT", Double.toString(moment));
+            TrimVideo.startTrim(cutVideo, videoFolderPath, 0, moment, newName);
         } else {
             Log.i("MOMENT", Double.toString(moment));
-            TrimVideo.startTrim(cutVideo, videoFolderPath, (long) moment, (long) timescale, newName);
+            TrimVideo.startTrim(cutVideo, videoFolderPath, moment, timescale, newName);
         }
         return newName;
     }
@@ -190,10 +172,10 @@ public class WorkWithVideo {
         FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + "output.mp4"), "rw").getChannel();
         out.writeContainer(fileChannel);
         fileChannel.close();
-        /*int isClear = WorkWithFiles.clear(filePaths);
+        int isClear = WorkWithFiles.clear(filePaths);
         if (isClear == ResultsCodes.FILE_NOT_EXIST) {
             Log.v("ERROR", "File not exist");
-        }*/
+        }
         return new File(videoFolderPath + "output.mp4");
     }
 }
