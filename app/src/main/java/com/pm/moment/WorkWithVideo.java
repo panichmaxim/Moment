@@ -84,11 +84,7 @@ public class WorkWithVideo {
             double timescale = duration / track.getTrackMetaData().getTimescale();
             long[] sampleDurations = track.getSampleDurations();
             double moment;
-            if (counter == 1) {
-                moment = getMoment(track, duration, timescale, sampleDurations);
-            } else {
-                moment = getMoment(track, duration, timescale, sampleDurations);
-            }
+            moment = getMoment(track, duration, timescale, sampleDurations);
             File cutVideo = new File(videoUris.get(counter - 1));
             String newName = cutVideos(cutVideo, moment, timescale, counter);
             newVideosPaths.add(videoFolderPath + newName);
