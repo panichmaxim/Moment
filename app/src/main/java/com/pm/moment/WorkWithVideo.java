@@ -2,7 +2,11 @@ package com.pm.moment;
 
 import android.os.Environment;
 import android.util.Log;
+
 import com.coremedia.iso.boxes.Container;
+import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
+import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
 import com.googlecode.mp4parser.FileDataSourceViaHeapImpl;
 import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.Sample;
@@ -13,6 +17,7 @@ import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
 import com.googlecode.mp4parser.authoring.tracks.CroppedTrack;
 
 import org.jcodec.api.JCodecException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -28,6 +33,7 @@ public class WorkWithVideo {
 
     public static File init(List<String> videoUris) throws IOException, JCodecException {
         WorkWithFiles.checkDefaultDir(videoFolderPath);
+        convertToMp4(videoUris);
         List<Movie> movies = initVideos(videoUris);
         if (movies != ResultsCodes.INIT_VIDEO_NOT_EXIST) {
             List<Track> audioTracks = getAudioTracks(movies);
@@ -38,6 +44,45 @@ public class WorkWithVideo {
             return concat(audioTracks, videoTracks, newVideosPaths);
         }
         return ResultsCodes.ERROR_CREATE_VIDEO;
+    }
+
+    private static void convertToMp4(List<String> videoUris) {
+        int k = 0;
+        for (String videoUri : videoUris) {
+            if (videoUri.contains(".3gp")) {
+                try {
+                    String output = videoFolderPath + "converted_video_" + k + ".mp4";
+                    convertVideo(videoUri, output);
+                    videoUris.set(k, output);
+                    k++;
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    private static void convertVideo(String input, String output) throws IOException, InterruptedException, FFmpegNotSupportedException {
+        FFmpeg ffmpeg = FFmpeg.getInstance(App.context);
+        ffmpeg.loadBinary(new LoadBinaryResponseHandler() {
+            @Override
+            public void onStart() {
+            }
+
+            @Override
+            public void onFailure() {
+            }
+
+            @Override
+            public void onSuccess() {
+            }
+
+            @Override
+            public void onFinish() {
+            }
+        });
+        String args = ffmpeg + " -i " + input + " ffmpeg encoding paramaters... " + "-f mp4" + output;
+        Runtime r = Runtime.getRuntime();
+        Process p = r.exec("/system/bin/sh" + "-c" + args);
+        p.waitFor();
     }
 
     private static List<Movie> initVideos(List<String> videoUris) throws IOException, JCodecException {
@@ -80,11 +125,10 @@ public class WorkWithVideo {
         List<String> newVideosPaths = new ArrayList<String>();
         int counter = 1;
         for (Track track : trackList) {
-            double duration = track.getDuration();
-            double timescale = duration / track.getTrackMetaData().getTimescale();
-            long[] sampleDurations = track.getSampleDurations();
+//            double duration = track.getDuration(); // длительность в байтах
+            double timescale = (double) track.getDuration() / (double) track.getTrackMetaData().getTimescale(); // в секундах длительность
             double moment;
-            moment = getMoment(track, duration, timescale, sampleDurations);
+            moment = getMoment(track);
             File cutVideo = new File(videoUris.get(counter - 1));
             String newName = cutVideos(cutVideo, moment, timescale, counter);
             newVideosPaths.add(videoFolderPath + newName);
@@ -93,34 +137,24 @@ public class WorkWithVideo {
         return newVideosPaths;
     }
 
-    private static double getMoment(Track track, double duration, double timescale, long[] sampleDurations) {
+    private static double getMoment(Track track) {
         double moment = 0;
         List<Sample> samples = track.getSamples();
-        //long maxSample = 0;
+        long[] sampleDurations = track.getSampleDurations();
         double sampleCounter = 0;
-        /*
-        for (int i = 0; i < samples.size(); i++) {
-            sampleCounter += sampleDurations[i];
-            if (samples.get(i).getSize() >= maxSample) {
-                maxSample = samples.get(i).getSize();
-                moment = sampleCounter * timescale / duration;
-            }
-        }*/
         int counter = 1;
         int highSampleDur = 100;
-        ByteBuffer buffer = samples.get(0).asByteBuffer();
-        byte[] b = new byte[buffer.remaining()];
-        buffer.wrap(b);
-        Log.i("BUFF", Integer.toString(ByteArrayTo.convertToInt(b)));
+        long highestSound = 350;
         for (int i = 0; i < samples.size(); i++) {
-            sampleCounter += sampleDurations[i];
-            if (samples.get(i).getSize() > 350 && i > 0) {
+            sampleCounter += (double) sampleDurations[i];
+            if (samples.get(i).getSize() > highestSound && i > 0) {
                 if (samples.get(i).getSize() == samples.get(i - 1).getSize()) {
                     counter++;
                 } else {
                     if (counter <= highSampleDur) {
                         highSampleDur = counter;
-                        moment = sampleCounter * timescale / duration;
+                        highestSound = samples.get(i).getSize();
+                        moment = sampleCounter / (double) track.getTrackMetaData().getTimescale();
                         Log.i("SAMPLE", Long.toString(samples.get(i).getSize()));
                         Log.i("MOMENT", Double.toString(moment));
                         Log.i("COUNTER", Integer.toString(counter));
@@ -147,7 +181,6 @@ public class WorkWithVideo {
         moment *= 1000;
         timescale *= 1000;
         if (counter == 1) {
-            moment -= 150;
             Log.i("MOMENT", Double.toString(moment));
             TrimVideo.startTrim(cutVideo, videoFolderPath, 0, moment, newName);
         } else {

@@ -10,11 +10,7 @@ import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
-import android.Manifest.permission
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.support.v4.app.ActivityCompat
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -70,13 +66,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun getPath(uri: Uri): String? {
+    private fun getPath(uri: Uri): String? {
         val projection = arrayOf(MediaStore.Images.Media.DATA)
         val cursor = managedQuery(uri, projection, null, null, null)
         if (cursor != null) {
-            val column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
+            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
             cursor.moveToFirst()
-            return cursor.getString(column_index)
+            return cursor.getString(columnIndex)
         } else
             return null
     }

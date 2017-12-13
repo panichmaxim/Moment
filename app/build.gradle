@@ -3,12 +3,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 26
     buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "com.pm.moment"
         minSdkVersion 16
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -30,12 +30,13 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
+    compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.android.support:design:26.1.0'
     compile 'net.alhazmy13.MediaPicker:libary:2.3.3'
     compile 'com.googlecode.mp4parser:isoparser:1.1.21'
     compile 'org.jcodec:jcodec:0.2.1'
     compile 'org.jcodec:jcodec-android:0.2.1'
+    compile 'com.writingminds:FFmpegAndroid:0.3.2'
     testCompile 'junit:junit:4.12'
 }
 repositories {
