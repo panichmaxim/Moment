@@ -69,11 +69,11 @@ public class TrimVideo {
         }
 
         for (Track track : tracks) {
-            long currentSample = 0;
+            double currentSample = 0;
             double currentTime = 0;
             double lastTime = -1;
-            long startSample1 = -1;
-            long endSample1 = -1;
+            double startSample1 = -1;
+            double endSample1 = -1;
 
             for (int i = 0; i < track.getSampleDurations().length; i++) {
                 long delta = track.getSampleDurations()[i];
@@ -91,7 +91,7 @@ public class TrimVideo {
                 currentTime += (double) delta / (double) track.getTrackMetaData().getTimescale();
                 currentSample++;
             }
-            movie.addTrack(new AppendTrack(new CroppedTrack(track, startSample1, endSample1)));
+            movie.addTrack(new AppendTrack(new CroppedTrack(track, (long) startSample1, (long) endSample1)));
         }
 
         dst.getParentFile().mkdirs();
