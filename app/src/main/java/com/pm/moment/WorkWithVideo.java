@@ -1,11 +1,12 @@
 package com.pm.moment;
 
 import android.os.Environment;
+import android.util.Log;
+
 import com.coremedia.iso.boxes.Container;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
-import com.googlecode.mp4parser.FileDataSourceViaHeapImpl;
 import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.Sample;
 import com.googlecode.mp4parser.authoring.Track;
@@ -33,11 +34,7 @@ public class WorkWithVideo {
         if (movies != ResultsCodes.INIT_VIDEO_NOT_EXIST) {
             List<Track> audioTracks = getAudioTracks(movies);
             List<Track> videoTracks = getVideoTracks(movies);
-            List<String> newVideosPaths = getGetNewVideosPaths(audioTracks, videoTracks, videoUris);
-            movies = initVideos(newVideosPaths);
-            audioTracks = getAudioTracks(movies);
-            videoTracks = getVideoTracks(movies);
-            return concat(audioTracks, videoTracks, newVideosPaths);
+            return output(audioTracks, videoTracks);
         }
         return ResultsCodes.ERROR_CREATE_VIDEO;
     }
@@ -117,25 +114,31 @@ public class WorkWithVideo {
         return videoTracks;
     }
 
-    private static List<String> getGetNewVideosPaths(List<Track> audioTrackList, List<Track> videoTrackList, List<String> videoUris) throws IOException {
-        List<String> newVideosPaths = new ArrayList<String>();
+    private static File output(List<Track> audioTrackList, List<Track> videoTrackList) throws IOException {
+        Movie result = new Movie();
         int counter = 0;
         for (Track track : audioTrackList) {
-            long moment;
-            moment = getMoment(track);
-            File cutVideo = new File(videoUris.get(counter));
-            String newName = "Cut" + counter + ".mp4";
+            long moment = getMoment(track);
             long videoMoment = videoTrackList.get(counter).getSamples().size() * moment / track.getSamples().size();
             if (counter == 0) {
-                trimVideo(cutVideo, newName, 0, moment, 0, videoMoment);
+                result.addTrack(new AppendTrack(new CroppedTrack(track, 0, moment)));
+                result.addTrack(new AppendTrack(new CroppedTrack(videoTrackList.get(counter), 0, videoMoment)));
             } else {
-                trimVideo(cutVideo, newName, moment, track.getSamples().size(), videoMoment,
-                        videoTrackList.get(counter).getSamples().size() - 1);
+                result.addTrack(new AppendTrack(new CroppedTrack(track, moment, track.getSamples().size())));
+                result.addTrack(new AppendTrack(new CroppedTrack(videoTrackList.get(counter), videoMoment, videoTrackList.get(counter).getSamples().size())));
             }
-            newVideosPaths.add(videoFolderPath + newName);
             counter++;
         }
-        return newVideosPaths;
+        return writeOutput(result);
+    }
+
+    private static File writeOutput(Movie movie) throws IOException {
+        Container out = new DefaultMp4Builder().build(movie);
+        Log.i("TAG", Long.toString(movie.getTimescale()));
+        FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + "output.mp4"), "rw").getChannel();
+        out.writeContainer(fileChannel);
+        fileChannel.close();
+        return new File(videoFolderPath + "output.mp4");
     }
 
     private static long getMoment(Track track) {
@@ -159,43 +162,5 @@ public class WorkWithVideo {
             }
         }
         return moment;
-    }
-
-    private static void trimVideo(File cutVideo, String newName, long startSample, long endSample,
-                                 long startVideoSample, long endVideoSample) throws IOException {
-        Movie movie = MovieCreator.build(new FileDataSourceViaHeapImpl(cutVideo.getAbsolutePath()));
-        List<Track> tracks = movie.getTracks();
-        movie.setTracks(new LinkedList<Track>());
-        for (Track track : tracks) {
-            if (track.getHandler().equals("soun")) {
-                movie.addTrack(new AppendTrack(new CroppedTrack(track, startSample, endSample)));
-            } else if (track.getHandler().equals("vide")) {
-                movie.addTrack(new AppendTrack(new CroppedTrack(track, startVideoSample, endVideoSample)));
-            }
-        }
-        Container out = new DefaultMp4Builder().build(movie);
-        FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + newName), "rw").getChannel();
-        out.writeContainer(fileChannel);
-        fileChannel.close();
-    }
-
-    private static File concat(List<Track> audioTracks, List<Track> videoTracks, List<String> filePaths) throws IOException, JCodecException {
-        Movie result = new Movie();
-        if (audioTracks.isEmpty() | videoTracks.isEmpty()) {
-            return ResultsCodes.ERROR_CREATE_VIDEO;
-        }
-        result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
-        result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
-        Container out = new DefaultMp4Builder().build(result);
-        FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + "output.mp4"), "rw").getChannel();
-        out.writeContainer(fileChannel);
-        fileChannel.close();
-        /*
-        int isClear = WorkWithFiles.clear(filePaths);
-        if (isClear == ResultsCodes.FILE_NOT_EXIST) {
-            Log.v("ERROR", "File not exist");
-        }
-        */
-        return new File(videoFolderPath + "output.mp4");
     }
 }
