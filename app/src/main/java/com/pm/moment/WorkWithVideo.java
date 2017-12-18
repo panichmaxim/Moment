@@ -14,7 +14,9 @@ import com.googlecode.mp4parser.authoring.builder.DefaultMp4Builder;
 import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
 import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
 import com.googlecode.mp4parser.authoring.tracks.CroppedTrack;
+
 import org.jcodec.api.JCodecException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -48,7 +50,8 @@ public class WorkWithVideo {
                     convertVideo(videoUri, output);
                     videoUris.set(k, output);
                     k++;
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
     }
@@ -79,7 +82,7 @@ public class WorkWithVideo {
     }
 
     private static List<Movie> initVideos(List<String> videoUris) throws IOException, JCodecException {
-        List<Movie> inMovies = new ArrayList<Movie>();
+        List<Movie> inMovies = new ArrayList<>();
         for (String videoUri : videoUris) {
             File video = new File(videoUri);
             if (!video.exists()) {
@@ -117,28 +120,32 @@ public class WorkWithVideo {
     private static File output(List<Track> audioTrackList, List<Track> videoTrackList) throws IOException {
         Movie result = new Movie();
         int counter = 0;
-        for (Track track : audioTrackList) {
-            long moment = getMoment(track);
-            long videoMoment = videoTrackList.get(counter).getSamples().size() * moment / track.getSamples().size();
+        List<Track> audioTracks = new ArrayList<>();
+        List<Track> videoTracks = new ArrayList<>();
+        for (Track audioTrack : audioTrackList) {
+            long moment = getMoment(audioTrack);
+            long videoMoment = videoTrackList.get(counter).getSamples().size() * moment / audioTrack.getSamples().size();
             if (counter == 0) {
-                result.addTrack(new AppendTrack(new CroppedTrack(track, 0, moment)));
-                result.addTrack(new AppendTrack(new CroppedTrack(videoTrackList.get(counter), 0, videoMoment)));
+                audioTracks.add(new CroppedTrack(audioTrack, 0, moment));
+                videoTracks.add(new CroppedTrack(videoTrackList.get(counter), 0, videoMoment));
             } else {
-                result.addTrack(new AppendTrack(new CroppedTrack(track, moment, track.getSamples().size())));
-                result.addTrack(new AppendTrack(new CroppedTrack(videoTrackList.get(counter), videoMoment, videoTrackList.get(counter).getSamples().size())));
+                audioTracks.add(new CroppedTrack(audioTrack, moment, audioTrack.getSamples().size()));
+                videoTracks.add(new CroppedTrack(videoTrackList.get(counter), videoMoment, videoTrackList.get(counter).getSamples().size()));
             }
             counter++;
         }
-        return writeOutput(result);
+        result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
+        result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
+        return saveMovie(result, "output.mp4");
     }
 
-    private static File writeOutput(Movie movie) throws IOException {
+    private static File saveMovie(Movie movie, String outputName) throws IOException {
         Container out = new DefaultMp4Builder().build(movie);
         Log.i("TAG", Long.toString(movie.getTimescale()));
-        FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + "output.mp4"), "rw").getChannel();
+        FileChannel fileChannel = new RandomAccessFile(String.format(videoFolderPath + outputName), "rw").getChannel();
         out.writeContainer(fileChannel);
         fileChannel.close();
-        return new File(videoFolderPath + "output.mp4");
+        return new File(videoFolderPath + outputName);
     }
 
     private static long getMoment(Track track) {
